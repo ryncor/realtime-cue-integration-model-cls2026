@@ -12,7 +12,7 @@ dir.create(FIG, showWarnings = FALSE)
 if (!file.exists(PY)) stop('Missing ', PY)
 if (!file.exists(MODEL)) stop('Missing ', MODEL)
 
-FONT <- 'Noto Sans'
+FONT <- Sys.getenv('CLS_FIGURE_FONT', unset = 'Noto Sans')
 
 # Figure 1: single-tracker control automaton
 node_df <- data.frame(
@@ -86,9 +86,17 @@ ggsave(
   device = cairo_pdf, family = FONT
 )
 
-# Figure 2: uncluttered grayscale revision trace (three vertically aligned tiers)
+# Figure 2: revision trace
 trace_file <- tempfile(fileext = '.csv')
-status <- system2('python3', c(PY, '--model', MODEL, '--out', trace_file),
+py_cmd <- Sys.getenv('PYTHON', unset = '')
+if (!nzchar(py_cmd)) {
+  available <- Sys.which(c('python3', 'python'))
+  available <- available[nzchar(available)]
+  if (!length(available)) stop('Python not found; set PYTHON to the interpreter path')
+  py_cmd <- unname(available[[1]])
+}
+status <- system2(shQuote(py_cmd),
+                  c(shQuote(PY), '--model', shQuote(MODEL), '--out', shQuote(trace_file)),
                   stdout = '', stderr = '')
 if (status != 0 || !file.exists(trace_file))
   stop('Failed to extract single-trial revision trace')
@@ -106,7 +114,7 @@ XBREAKS <- seq(0, floor(XMAX / 50) * 50, by = 50)
 ONSET <- D$boundary_ms[1]
 TALKER <- D$speaker_available_ms[1]
 
-# All six measurements from the online trace, together on ONE common-axis plot.
+# all six measurements from the online trace
 cue_order <- c('Spectral center', 'Spectral spread', 'Spectral skewness',
                'Elapsed frication', 'Voicing proportion', 'Vowel F2 onset')
 cues <- rbind(

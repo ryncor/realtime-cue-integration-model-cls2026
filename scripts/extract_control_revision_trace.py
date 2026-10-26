@@ -8,11 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = (
-    Path(__file__).resolve().parents[1]
-    if Path(__file__).resolve().parent.name == 'scripts'
-    else Path.cwd()
-)
+ROOT = Path(__file__).resolve().parents[1]
 MODEL_DIR = ROOT / 'realtime_model'
 if str(MODEL_DIR) not in sys.path:
     sys.path.insert(0, str(MODEL_DIR))
@@ -147,7 +143,7 @@ if __name__ == '__main__':
     ap.add_argument(
         '--model',
         default=str(
-            ROOT / 'realtime_model' / 'phonetic_full_inventory_model.npz'
+            ROOT / 'demos' / 'output' / 'learning' / 'phonetic_full_inventory_model.npz'
         ),
     )
     ap.add_argument('--out', required=True)

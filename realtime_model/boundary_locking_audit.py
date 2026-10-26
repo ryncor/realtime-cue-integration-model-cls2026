@@ -123,7 +123,7 @@ def main():
     )
     ap.add_argument(
         "--model",
-        default=str(Path(__file__).with_name("phonetic_full_inventory_model.npz")),
+        default=str(ROOT / "demos" / "output" / "learning" / "phonetic_full_inventory_model.npz"),
     )
     ap.add_argument("--n-test", type=int, default=1500)
     ap.add_argument("--seed", type=int, default=20260928)
@@ -269,7 +269,6 @@ def main():
     BS.to_csv(out / "boundary_relative_summary.csv", index=False)
 
     # B. Matched duration manipulation.
-    #
     eligible = list(enumerate(trials))
     manip_conditions = ["full_model", "full_robustness_only", "full_no_guard"]
     if args.include_binary_manipulation:
@@ -298,7 +297,6 @@ def main():
             if not np.array_equal(_frication_voicing_sequence(tt, 5)[:len(prefix)], prefix):
                 raise AssertionError(f'trial {trial_id}: duration shift {shift} changed early voicing frames')
 
-        # verify this is a genuine matched manipulation
         for shift, tt in variants.items():
             expected = base_boundary + shift
             if int(tt.boundary_ms) != expected:

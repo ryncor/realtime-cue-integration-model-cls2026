@@ -1,0 +1,10 @@
+# Preserve content hashes in provenance manifests across operating systems.
+*.py text eol=lf
+*.R text eol=lf
+*.csv text eol=lf
+*.json text eol=lf
+*.tex text eol=lf
+*.bib text eol=lf
+*.md text eol=lf
+*.npz binary
+*.pdf binary
