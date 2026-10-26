@@ -1,0 +1,642 @@
+\documentclass[12pt]{article}
+
+\usepackage{cls}
+\usepackage{amsfonts}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{qtree}
+\usepackage{tikz}
+\usepackage{url}
+\usepackage{natbib}
+\usepackage{tipa}
+\usepackage[hidelinks]{hyperref}
+\usepackage[textsize=tiny]{todonotes}
+
+\let\savedmathrm\mathrm
+\let\savedmathit\mathit
+\usepackage{gb4e}
+\let\mathrm\savedmathrm
+\let\mathit\savedmathit
+\noautomath
+
+
+\title{A Computational Model of Real-Time Phonetic Cue Integration}
+\author{Ryan Corrigan}
+\organization{University of Illinois Urbana-Champaign}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+Speech perception unfolds over time, with acoustic cues arriving at different times in the signal \citep{MillerDexter1988,McMurrayClayardsTanenhausAslin2008,SchreiberMcMurray2019}. 
+%
+The category assigned to a segment of the input signal can therefore depend not only on which cues are present, but when those cues become informative.
+
+A recurring distinction in accounts of real-time speech perception is between continuous and buffered cue integration \citep{McMurrayClayardsTanenhausAslin2008,GalleEtAl2019,KimTremblayCho2024,MueggeKimMcMurray2026}.
+%
+Under a continuous account, partial acoustic information can affect lexical hypotheses as soon as it becomes available \citep{McClellandElman1986,AllopennaMagnusonTanenhaus1998,McMurrayClayardsTanenhausAslin2008,ReinischSjerps2013,ToscanoMcMurray2015}.
+%
+Under a buffered account, some acoustic information is retained without immediately affecting higher level interpretations, such that lexical access is delayed until sufficient additional information has become available \citep{GalleEtAl2019,SchreiberMcMurray2019}.
+
+Much of the existing evidence favors continuous integration for a number of contrasts. 
+%
+Early information about stop voicing and manner can affect lexical activation before later vowel-duration cues become available \citep{MillerDexter1988,McMurrayClayardsTanenhausAslin2008}, formant information can begin influencing recognition before duration-related cues \citep{ReinischSjerps2013}, and contextual information that precedes a target can similarly affect interpretation as soon as the target cue arrives, whereas later arriving vowel duration information produces a later effect \citep{ToscanoMcMurray2015}.
+
+However, continuous integration is not universal. Evidence of buffered integration is especially prevalent for English fricatives. For English word-initial /s/--/\textesh/, listeners can withhold lexical commitment until the following vowel despite substantial information in the frication \citep{GalleEtAl2019,SchreiberMcMurray2019,KimMueggeMcMurray2026}.
+%
+This buffering does not appear to be a general property of fricative perception. Seoul Korean sibilants show cue-specific integration, with consonantal information generally influencing recognition before later vocalic information and long frication providing relatively early evidence for /s*/ \citep{Ko2024}.
+%
+Relatedly, Seoul Korean stop perception shows that even an early cue can have a delayed effect when a later-arriving cue carries greater perceptual weight, as VOT is integrated later when F0 provides stronger information for the contrast \citep{KimTremblayCho2024}.
+%
+These findings suggest that continuous and buffered behavior may emerge from differences in the timing and informativeness of the cues used to identify a contrast.
+
+Models of speech perception generally characterize how acoustic cues support perception without making explicit predictions about this real-time process.
+%
+The Normal a Posteriori Probability (NAPP) model, for example, represents phonetic categories as multivariate distributions over acoustic cues and uses the likelihood of an observed cue pattern under those distributions to predict categorization \citep{Nearey1997}.
+%
+Computing Cues Relative to Expectations (C-CuRE) similarly models categorization from acoustic cues but allows cue values to be interpreted relative to expectations associated with factors such as speech rate, speaker, and phonetic context \citep{McMurrayJongman2011}.
+%
+Both models have primarily been evaluated by using complete acoustic cue sets to predict listeners' final phonetic identification responses \citep{Nearey1997,MaddoxMolisDiehl2002,ColeEtAl2010,McMurrayJongman2011}.
+%
+These evaluations may establish how well the models account for categorization or which cues are used to make categorizations, but not how incoming acoustic information contributes to perception as it becomes available.
+
+This distinction is important because cues that predict endpoint categorization may not yet be available when recognition begins.
+%
+For example, consonant-to-vowel ratio can predict voicing judgments for English stops \citep{PortDalby1982}, but the complete ratio cannot be known until both temporal intervals are complete.
+%
+A model operating on a completed cue vector can therefore conveniently make use of this relationship without specifying what evidence supported the developing interpretation before the ratio was available.
+
+This has consequences for causal explanation.
+%
+If an interpretation begins influencing lexical processing before the ratio is available, that effect cannot depend on the completed ratio, regardless of its predictive value for the final response.
+%
+The effect must arise from information already available to the listener, potentially including partial duration estimates.
+%
+Real-time modeling therefore constrains which information could have contributed to recognition at a particular moment and makes it possible to investigate the processing mechanisms through which that information produces its effects.
+
+These real-time phenomena have been studied primarily under two broad approaches in speech perception.
+%
+Gating studies present progressively longer portions of a stimulus, allowing researchers to determine when sufficient information becomes available for the listener to accurately categorize a sound \citep{Grosjean1980}.
+%
+However, each gate requires an explicit judgment after the presentation of the stimulus and therefore tests when a listener \textit{can} categorize from a given prefix, not when listeners use that information while speech is unfolding. 
+
+Eye tracking instead measures competition among lexical alternatives while speech continues to unfold \citep{AllopennaMagnusonTanenhaus1998}.
+%
+This is a crucial distinction as evidence of buffered integration for English fricatives comes from eye tracking studies, and this observed effect dissipates under gating paradigms \citep{GalleEtAl2019}, which likely allow for earlier categorizations due to being allowed an explicit judgment.
+%
+When acoustic cues are manipulated in an eye-tracking experiment, differences in fixation trajectories can reveal when particular cues begin affecting lexical activation.
+%
+The difference between gating and eye-tracking results therefore suggests that information sufficient for categorization is not necessarily incorporated into recognition as soon as it becomes available.
+%
+The timing of cue integration depends on how incoming acoustic information interacts with the evidence already accumulated and the developing perceptual interpretation.
+%
+NAPP and C-CuRE do not specify these dependencies.
+%
+A real-time cue-integration model must therefore extend these accounts with an explicit representation of the developing perceptual state and the process by which that state changes as new evidence becomes available.
+
+This paper develops a computational model for making this temporal structure explicit. 
+%
+The architecture is a real-time register machine with two parallel segment trackers. 
+%
+Each tracker accumulates acoustic evidence, maintains a graded distribution over possible sound categories, and can transition between evaluation, commitment, and reprocessing states as new acoustic information becomes available. 
+
+The model provides a process account of cue integration and makes qualitative predictions not only about endpoint categorization, but also about the relative timing of category commitment, the order in which adjacent sounds are recognized, and whether an interpretation is later revised.
+
+\section{Representing temporally indexed acoustic evidence}
+
+The input to the model is a first-in, first-out sequence of acoustic frames. 
+% 
+Each frame corresponds to a time-ordered index and contains the acoustic measurements that are available at that point in the signal. 
+%
+A frame can be represented as a cue vector:
+
+\begin{exe}
+\ex $\mathbf{F}_t = (x_{1,t}, x_{2,t}, \ldots, x_{k,t})$
+\end{exe}
+
+where $k$ is the total number of acoustic cue dimensions, and $x_{i,t}$ denotes the value of cue $i$ at time $t$, for $i=1,\ldots,k$.
+%
+Not every cue is available at every point in time.
+%
+Some cues are available near the beginning of a segment, some become more reliable as additional material is observed, and some cannot be completely specified until a later acoustic event occurs. 
+
+The control architecture maintains a tracker for each currently relevant portion of the signal.
+%
+Each tracker is responsible for a contiguous region of the incoming frame stream and retains the evidence relevant to that region as new frames arrive.
+%
+The representation of this evidence can differ across cues.
+%
+For example, a cue may be represented as (i) a local measurement, such as a spectral value estimated from the current frame; (ii) a running estimate, such as the average spectral properties of frication observed so far; or (iii) a constraint on a measurement whose final value is not yet known, such as the total duration of an ongoing vowel or the consonant-to-vowel duration ratio before the vowel has ended.
+%
+In the latter two cases, additional input refines an existing estimate or constraint without supplying a completely new cue.
+
+The architecture is compatible with different models of phonetic categorization and contextual adjustment, provided they support incremental updates to category evidence and the reevaluation of earlier evidence as new context becomes available.
+%
+In the implementation described here, NAPP- and C-CuRE-inspired representations are used as components of the broader real-time control architecture and are not complete implementations of either model \citep{Nearey1997,McMurrayJongman2011}.
+%
+The following sections describe these representations.
+
+\subsection{Category representations}
+
+Each sound category $c$ is represented as a multivariate distribution over a set of acoustic cue dimensions.
+%
+Let $\mathbf{X}=(X_1,X_2,\ldots,X_k)$ denote the random vector corresponding to those cue dimensions.
+%
+In the present implementation, category distributions are assumed to be multivariate Gaussian:
+%
+\begin{exe}
+\ex $\mathbf{X} \mid c \sim \mathcal{N}(\boldsymbol{\mu}_c,\boldsymbol{\Sigma}_c)$
+\end{exe}
+%
+The incoming frames $\mathbf{F}_t$ described above provide the observations from which a tracker constructs its current cue representation.
+%
+For a tracker beginning at time $\tau$, let $\mathbf{x}_t$ denote the cue information that can be derived from the frames $\mathbf{F}_{\tau},\ldots,\mathbf{F}_t$, and let $A_t$ denote the cue dimensions currently available.
+%
+The NAPP-inspired category model converts this evidence into graded category support by evaluating the available cue vector under each competing Gaussian distribution and normalizing the resulting prior-weighted likelihoods:
+%
+\begin{exe}
+\ex $P(c \mid \mathbf{x}_{t,A_t}) =
+\frac{
+P(c)\,\mathcal{N}(\mathbf{x}_{t,A_t};
+\boldsymbol{\mu}_{c,A_t},\boldsymbol{\Sigma}_{c,A_t})
+}{
+\sum_{c'} P(c')\,\mathcal{N}(\mathbf{x}_{t,A_t};
+\boldsymbol{\mu}_{c',A_t},\boldsymbol{\Sigma}_{c',A_t})
+}$
+\end{exe}
+%
+These posterior probabilities constitute the graded category support maintained by the tracker and used by the control system.
+%
+As additional cue dimensions become available, the posterior is recomputed from the expanded evidence.
+%
+Cue dimensions that are not yet available are omitted from the likelihood calculation.
+
+Partially observed temporal cues instead contribute likelihood terms based on the evidence accumulated so far, which are incorporated into the same posterior update.
+%
+For an ongoing VOT interval or vowel, elapsed duration provides a right-censored observation evaluated using the survival probability of the relevant learned distribution.
+%
+During frication, observed voiced and unvoiced frames instead contribute a partial voicing likelihood, represented using a beta-binomial model.
+%
+The accumulated history constrains possible future voicing values, allowing commitment robustness to be evaluated before frication ends.
+%
+The completed frication duration is used as temporal evidence rather than as an additional category-identity cue.
+
+Under this representation, effective cue weighting is implicit in the category distributions.
+%
+A cue has greater influence on category support when its observed value is more diagnostic of the competing category distributions, taking both the separation of those distributions and their covariance structure into account.
+%
+Cues whose category distributions overlap strongly contribute relatively little, whereas cues that better distinguish the competing categories contribute more.
+
+Category priors are uniform.
+%
+Category-specific covariance matrices are regularized toward manner-pooled covariance estimates, with pooling strength $32$, followed by $10\%$ shrinkage toward their diagonals.
+
+\subsection{Context-relative encoding}
+
+The context representation is inspired by C-CuRE \citep{McMurrayJongman2011}, allowing previously observed acoustic cues to be interpreted relative to contextual expectations that become available later.
+%
+An observed cue is encoded relative to the contextual expectation available at time $t$:
+%
+\begin{exe}
+\ex $r_{i,t} = x_{i,t} - E[x_i \mid C_t]$
+\end{exe}
+%
+where $r_{i,t}$ is the context-relative value of cue $i$ at time $t$, $x_{i,t}$ is its observed value, and $C_t$ is the contextual information currently available to the system.
+%
+In the present implementation, the context model is learned from the training tokens independently of phonetic category.
+%
+For each cue, the model first estimates a global mean and then learns additive offsets associated with speaker, preceding phonetic context, and following phonetic context.
+%
+Because these effects overlap, the three sets of offsets are estimated by iterative backfitting where each offset is estimated from the residuals remaining after the current estimates of the other contextual effects have been removed.
+%
+Each group-specific residual mean is shrunk toward zero by a factor of $n/(n+\lambda)$, where $n$ is the number of observations contributing to that estimate and $\lambda=20$ in the present implementation.
+%
+For spectral cues, a category-independent multiplicative speaker scale is estimated and removed before the additive offsets are fit.
+
+When following context is known, $E[x_i \mid C_t]$ consists of the global mean together with the available speaker, left-context, and right-context offsets.
+%
+Following context can also enter gradiently while its identity is still uncertain.
+%
+After vowel onset, the primary tracker estimates a probability distribution over possible following-vowel contexts from the F2 evidence observed so far.
+%
+The retained consonant is evaluated separately under each possible right context, and the resulting context-conditioned likelihoods are combined according to these probabilities.
+%
+As additional vowel evidence accumulates, measurement uncertainty decreases and the contextual distribution can become more concentrated, progressively changing the contribution of the corresponding context-conditioned representations.
+%
+The retained acoustic evidence can then be reevaluated under the updated contextual distribution, motivating the reprocessing state described below.
+
+\section{Control architecture}
+
+The proposed control architecture takes the form of a real-time register machine with two parallel trackers.
+%
+Register machines are computational formalisms in which a small set of registers preserves information across successive operations while an explicit control system determines how those registers are updated \citep{ShepherdsonSturgis1963}.
+%
+The architecture adapts this idea to real-time speech processing.
+%
+Registers retain acoustic evidence and graded category support while control states determine when that information is evaluated, made available downstream, or reconsidered.
+%
+This separation makes register machines well suited to real-time cue integration because the consequences of incoming acoustic information depend on both previously accumulated evidence and the processing state of the developing interpretation, allowing the model to capture how recognition depends on its own history.
+
+Each tracker maintains a set of typed registers that carry information across successive frames.
+%
+These include an acoustic evidence buffer of type $\mathrm{Sequence}(\mathrm{Frame})$, leading and competing interpretations of type $\mathrm{Category}$, a graded category-support distribution of type $\mathrm{Distribution}(\mathrm{Category})$, and persistence counters of type $\mathbb{N}_0$ (nonnegative integers).
+%
+The category registers may be empty before an interpretation is available.
+%
+Explicitly typing these registers defines what kinds of information can be retained and constrains how that information can be manipulated, allowing the model's processing operations to be specified precisely.
+%
+Once an interpretation is committed, additional registers preserve the committed category and its support, represented as an optional $\mathrm{Category}\times[0,1]$ pair, so that later evidence can be evaluated relative to the earlier commitment.
+
+The use of parallel trackers further allows the architecture to represent concurrently active interpretations whose recognition order may not match their order in the acoustic stream, analogous to the use of concurrent state processes in real-time system specification \citep{Harel1987}.
+
+As candidate-region boundaries become available, the architecture maintains the corresponding interpretations as the acoustic stream unfolds.
+%
+The \textit{primary} tracker follows the newest candidate region, while the \textit{secondary} tracker retains the immediately preceding region when its interpretation remains relevant.
+%
+Two trackers are desirable because the temporal order of the acoustic regions and the order in which their interpretations become sufficiently established may not coincide.
+%
+For example, the newest region may provide enough evidence for commitment while the preceding region remains unresolved because information relevant to its interpretation becomes available only later.
+%
+A single tracker could represent this configuration, but would require complicating the control states and transitions needed to maintain multiple active interpretations. 
+%
+This would risk reducing the interpretability of the control architecture and making its states less directly aligned with the hypothesized psychological distinction between concurrently maintained candidate regions.
+
+Both trackers have the same four control states:
+
+\begin{exe}
+\ex \begin{xlist}
+    \ex \textsc{idle}: the tracker contains no active candidate region.
+    \ex \textsc{eval}: evidence for the candidate region is being evaluated, but its interpretation has not yet been committed for lexical access.
+    \ex \textsc{comm}: the current interpretation has reached the commitment criterion and can influence lexical processing.
+    \ex \textsc{reprocessing}: new acoustic or contextual evidence causes an earlier interpretation to be reevaluated.
+\end{xlist}
+\end{exe}
+
+During \textsc{eval}, \textsc{comm}, and \textsc{reprocessing}, each tracker maintains graded support over competing sound categories.
+%
+The control state specifies the functional status of this graded representation within the architecture.
+%
+In \textsc{comm}, the best-supported interpretation has reached the commitment criterion and can influence downstream processing while alternative categories may remain partially supported.
+
+Transitions between states mark changes in the functional status of the developing interpretation.
+%
+The transition from \textsc{idle} to \textsc{eval} marks the point at which the system begins actively maintaining and evaluating a candidate interpretation.
+%
+The transition from \textsc{eval} to \textsc{comm} marks the point at which that interpretation has remained sufficiently strong and differentiated from its competitors to begin influencing downstream processing.
+%
+A transition from \textsc{comm} to \textsc{reprocessing} marks the reopening of an interpretation when newly available evidence changes its support.
+%
+Reprocessing then returns to \textsc{comm} if an interpretation remains sufficiently supported under the updated evidence, or to \textsc{eval} if no interpretation currently satisfies the commitment criterion.
+%
+Figure~\ref{fig:control-automaton} summarizes the control states and principal transitions for a single tracker.
+%
+The two-tracker architecture consists of two concurrent instances of this same control system.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{\detokenize{figures/single_tracker_control_automaton.pdf}}
+\caption{Single-tracker control states and transitions.}
+\label{fig:control-automaton}
+\end{figure}
+
+\subsection{Evaluation and commitment}
+
+When the incoming acoustic evidence indicates the onset of a new candidate region, the primary tracker transitions from \textsc{idle} to \textsc{eval}.
+%
+As frames arrive, the tracker updates graded support over candidate categories using the acoustic evidence currently available.
+%
+Evaluation continues until one interpretation becomes sufficiently strong and stable relative to its competitors.
+%
+Let $c_{1,t}$ and $c_{2,t}$ denote the most and second-most strongly supported categories at time $t$, respectively, and define their separation as:
+
+\begin{exe}
+\ex $\Delta_t = P(c_{1,t} \mid \mathbf{x}_{t,A_t}) - P(c_{2,t} \mid \mathbf{x}_{t,A_t})$
+\end{exe}
+
+In the current implementation, commitment requires a leading-category posterior of at least $0.55$, a margin of at least $0.20$ over the next-best category, and persistence across two consecutive 5-ms updates.
+%
+These updates must favor the same category.
+%
+Unless confidence exceeds $0.95$, commitment additionally requires corroborating acoustic evidence that remains stable under plausible values of unresolved cues.
+%
+Correlated spectral measurements count as one evidence source, while partial voicing can provide an additional source once its estimated standard error falls below $0.04$.
+%
+If all acoustic features expected for the leading category have been observed, the model instead permits a provisional maximum-posterior commitment.
+
+Once the commitment criterion is met, the tracker transitions from \textsc{eval} to \textsc{comm}.
+%
+The best-supported interpretation is then available to lexical processing while graded support for competing categories is retained.
+%
+Lexical effects associated with a candidate follow its transition to \textsc{comm}, with a delay between changes in lexical activation and their manifestation in measures such as eye movements.
+
+\subsection{Two-tracker operation}
+
+When changes in the incoming signal indicate that a new candidate region has begun, the representation of the preceding region is transferred from the primary to the secondary tracker, while the primary begins evaluating the newly detected region.
+%
+The preceding region may still be in \textsc{eval} at the time of this transfer and can continue accumulating or incorporating evidence in the secondary tracker.
+%
+A possible trajectory is therefore:
+
+\begin{exe}
+\ex Region$_1$: Primary \textsc{eval} $\rightarrow$ Secondary \textsc{eval} $\rightarrow$ Secondary \textsc{comm}
+\ex Region$_2$: Primary \textsc{eval} $\rightarrow$ Primary \textsc{comm}
+\end{exe}
+
+Region$_2$ can consequently reach \textsc{comm} before Region$_1$, allowing recognition order to differ from the order of the corresponding regions in the acoustic signal.
+%
+Such a dissociation has been observed for English sibilants. Listeners can use coarticulatory information in frication to anticipate the following vowel before they have identified the current fricative \citep{SchreiberMcMurray2019}.
+%
+The two-tracker architecture provides a simple representation of this concurrency.
+
+The controller also maintains an estimate of whether the current acoustic segment is approaching its endpoint.
+%
+For an ongoing frication or voice-onset-time interval, elapsed duration is treated as a right-censored observation, meaning that the interval has continued for at least that long but its eventual duration remains unknown.
+%
+Duration expectation, $D_t$, is the category-posterior-weighted probability that the interval will end within the next 5~ms, conditional on its having continued through time $t$.
+%
+This probability is calculated from the learned duration distributions of the competing categories.
+%
+Once the endpoint is observed, $D_t$ is set to 1, distinguishing an anticipated endpoint from an observed one.
+
+A second measure, $V_t$, represents evidence that the following vowel has begun.
+%
+Before vowel-onset F2 becomes available, this measure is zero.
+%
+Once F2 is observed, its typicality is evaluated against a broad envelope derived from the learned /a/ and /i/ F2 distributions.
+%
+Evidence accumulates across successive vowel frames according to $V_t = 1 - e^{-n_t q_t / 1.5}$, where $q_t$ is the strength of the current F2-based vowel-presence evidence and $n_t$ is the number of observed vowel frames.
+%
+This measure concerns the presence of a vowel rather than its identity.
+%
+A separate distribution over possible following vowels provides the contextual expectations used to interpret the preceding consonant.
+
+Duration expectation and following-vowel evidence are combined into a measure called combined readiness, $R_t = 1 - (1-D_t)(1-V_t)$.
+%
+This measure increases as either source provides stronger evidence that the current segment is ending or that the following vowel has begun.
+%
+Although bounded between 0 and 1, it is not interpreted as a calibrated posterior probability.
+%
+Combined readiness describes the availability of segment-boundary evidence rather than the model's confidence in a phonetic category.
+
+\subsection{Reprocessing}
+
+A committed interpretation can subsequently be affected by contextual information supplied by the other tracker.
+%
+When one tracker reaches \textsc{comm} and its interpretation provides relevant context for a candidate already maintained by the other tracker, the affected tracker can transition to \textsc{reprocessing}.
+%
+The retained acoustic evidence is then encoded again relative to the newly available contextual expectation, and support for the competing categories is recomputed.
+
+The updated evidence can produce several outcomes.
+%
+If the previously committed interpretation continues to satisfy the commitment criterion, the tracker returns to \textsc{comm} with the same category.
+%
+If another category becomes sufficiently supported, the tracker can recommit with a different interpretation.
+%
+If no interpretation satisfies the commitment criterion, the tracker returns to \textsc{eval} and remains open to additional evidence.
+
+A committed interpretation enters \textsc{reprocessing} when new acoustic or contextual evidence favors another category and either the committed category's support has fallen by at least $0.08$ or the new leader exceeds it by at least $0.10$.
+%
+Recommitment requires the ordinary posterior and margin criteria to hold for two consecutive updates.
+%
+Reprocessing therefore makes revision an explicit event in the modeled recognition trajectory, allowing changes to an earlier commitment to be traced as new evidence becomes available.
+
+Figure~\ref{fig:revision-trace} illustrates these operations for a naturally sampled /\textesh/ token from the synthetic test set.
+%
+Early frication evidence initially favors /s/ strongly enough to produce commitment.
+%
+Following-vowel F2 and speaker information subsequently become available, allowing the retained frication evidence to be reevaluated under updated contextual expectations.
+%
+The tracker enters \textsc{reprocessing} and category support shifts toward /\textesh/, leading it to recommit with the correct interpretation.
+
+Figure~\ref{fig:revision-trace} also shows duration expectation, following-vowel evidence, and combined readiness throughout the trial.
+%
+These measures show how evidence for the segment boundary develops over time, separately from the model's confidence in the competing phonetic categories.
+%
+They make it possible to compare when the model commits to a category with when evidence emerges that the preceding segment is ending.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{\detokenize{figures/single_trial_revision_trace.pdf}}
+\caption{Revision in a naturally sampled /\textesh/ test token: acoustic cues, category support, and tracker state. After initially committing to /s/, the tracker incorporates following-vowel and speaker information, reprocesses the retained evidence, and recommits to /\textesh/.}
+\label{fig:revision-trace}
+\end{figure}
+
+
+\section{Synthetic demonstrations}
+
+Simulations using synthetic acoustic data examined whether the architecture reproduces two findings from \citet{GalleEtAl2019}.
+%
+These are earlier lexical effects for stop voicing than English /s/--/\textesh/ identity in Experiment~5 and the dependence of fricative recognition timing on frication duration in Experiment~6.
+
+The simulations use hand-specified category distributions over conventional acoustic-phonetic dimensions.
+%
+The numerical values are synthetic and are not corpus estimates; they are intended to preserve phonologically plausible differences in the relative location and overlap of the category distributions.
+%
+Table~\ref{tab:category-distributions} gives the base distributions used to generate the modeled English consonants.
+
+\begin{table}[t]
+\centering
+\caption{Base acoustic category distributions used in the English simulations. Values are means with standard deviations in parentheses.}
+\label{tab:category-distributions}
+\scriptsize
+\renewcommand{\arraystretch}{1.20}
+
+\textbf{A. English fricatives}
+
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrr}
+\hline
+Category &
+M1 (kHz) &
+M2 (kHz) &
+M3 skew. &
+Fric. dur. (ms) &
+Voicing prop. &
+F2 onset (kHz) \\
+\hline
+/f/   & 4.50 (1.30) & 2.20 (.60) &  0.00 (.70) & 120 (22) & .06 (.08) & 1.55 (.18) \\
+/v/   & 4.40 (1.30) & 2.20 (.60) &  0.00 (.70) &  90 (20) & .55 (.20) & 1.55 (.18) \\
+/\texttheta/ & 5.00 (1.30) & 2.35 (.65) &  0.05 (.70) & 115 (22) & .06 (.08) & 1.65 (.18) \\
+/\dh/ & 4.90 (1.30) & 2.35 (.65) &  0.05 (.70) &  85 (20) & .55 (.20) & 1.65 (.18) \\
+/s/   & 7.00 (1.05) & 1.30 (.45) & -0.20 (.70) & 150 (22) & .05 (.07) & 1.78 (.18) \\
+/z/   & 6.80 (1.05) & 1.35 (.45) & -0.15 (.75) & 110 (20) & .50 (.20) & 1.78 (.18) \\
+/\textesh/ & 5.40 (1.00) & 1.65 (.50) &  1.25 (.55) & 155 (22) & .05 (.07) & 1.70 (.18) \\
+/\textyogh/ & 5.20 (1.00) & 1.70 (.50) &  1.10 (.60) & 115 (20) & .50 (.20) & 1.70 (.18) \\
+\hline
+\end{tabular}%
+}
+
+\vspace{1ex}
+\textbf{B. English stops}
+
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrr}
+\hline
+Category &
+VOT (ms) &
+Onset F0 (ST) &
+Vowel dur. (ms) &
+Burst M1 (kHz) &
+F2 onset (kHz) \\
+\hline
+/p/ & 55 (12) &  1.20 (.90) & 170 (44) & 1.70 (.80) & 1.25 (.18) \\
+/b/ &  8 ( 7) & -0.80 (.90) & 188 (45) & 1.70 (.80) & 1.25 (.18) \\
+/t/ & 65 (12) &  1.20 (.90) & 170 (44) & 4.50 (.90) & 1.50 (.18) \\
+/d/ & 10 ( 7) & -0.80 (.90) & 188 (45) & 4.50 (.90) & 1.50 (.18) \\
+/k/ & 75 (14) &  1.20 (.90) & 170 (44) & 3.00 (.85) & 1.72 (.20) \\
+/g/ & 18 ( 9) & -0.80 (.90) & 188 (45) & 3.00 (.85) & 1.72 (.20) \\
+\hline
+\end{tabular}%
+}
+\vspace{0.65\baselineskip}
+\end{table}
+
+\subsection{Synthetic data generation}
+
+The category distributions in Table~\ref{tab:category-distributions} were used to generate a synthetic training set of 6,000 tokens.
+%
+Training tokens were balanced across the 14 modeled English consonant categories, eight synthetic speakers, three preceding rate contexts, and two following-vowel contexts.
+%
+For each token, cue values were sampled from the category-specific distributions after applying the effects associated with its speaker and phonetic context.
+%
+Synthetic speakers differed in a common multiplicative scaling of spectral dimensions and in additive tendencies affecting temporal and voicing cues.
+%
+Preceding rate context shifted relevant duration and VOT measures, while following-vowel context affected vowel-onset information and, for fricatives, introduced category-specific coarticulatory variation.
+%
+The Gaussian category distributions and contextual adjustments used by the online model were then estimated from these generated training tokens and were not supplied directly from the generating parameters.
+
+A separate set of 1,500 tokens was generated for the real-time demonstration.
+%
+This set contained 375 tokens each of /d/, /t/, /s/, and /\textesh/, balanced across the same eight speakers and the two following-vowel contexts.
+%
+For these test tokens, preceding context was held at the neutral-rate condition.
+%
+Each sampled endpoint cue vector was then converted into a temporal sequence by assigning each cue the point at which its information became available to the model.
+%
+The simulation advances in 5-ms increments.
+%
+For fricatives, spectral measurements become available at 30 ms, while voicing is accumulated throughout frication.
+%
+Completed duration and voicing proportion become available at fricative offset, and following-vowel F2 becomes available 10 ms later.
+%
+For stops, burst information becomes available at 5 ms; VOT is observed incrementally until its completion, followed by vowel-onset F0 and F2 10 ms after vowel onset.
+%
+Vowel duration becomes complete at vowel offset.
+
+\subsection{English stop and fricative integration}
+
+To test whether the same control architecture can produce both early and delayed integration trajectories, English stop voicing and English sibilant categorization were compared using the same control architecture and commitment parameters.
+
+The comparison included 375 test trials each for /d/, /t/, /s/, and /\textesh/, with speaker and following-vowel context varied across trials.
+%
+All categories were evaluated within the full 14-category inventory, so the controller was not restricted to a binary contrast.
+%
+The relevant differences therefore arose from the learned category distributions and the times at which their acoustic cues became available.
+
+The resulting commitment trajectories differed substantially across the two sound classes (Figure~\ref{fig:english-commitment-times}).
+%
+Median first commitment occurred at 20 ms for /d/ and 70 ms for /t/, compared with 140 ms for /s/ and 150 ms for /\textesh/. 
+%
+First-commitment accuracy, defined as the proportion of trials in which the model's first committed category matched the generating category, was 82.7\% for /d/, 81.6\% for /t/, 89.1\% for /s/, and 86.7\% for /\textesh/.
+%
+The same controller therefore produced relatively early commitment for the stop contrast and substantially delayed commitment for the fricative contrast.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=.82\linewidth]{\detokenize{figures/realtime_commitment_times.pdf}}
+\caption{First-commitment times for English stops and sibilant fricatives in the 14-category simulation.}
+\label{fig:english-commitment-times}
+\end{figure}
+
+To examine whether the model also reproduces the frication-duration effect reported by \citet{GalleEtAl2019}, the same fricative tokens were replayed with frication duration shortened by 50~ms, left unchanged, or lengthened by 50~ms.
+%
+Other acoustic measurements were held constant, while the fricative boundary and boundary-dependent cue arrivals moved with the duration manipulation.
+%
+Commitment time was then measured relative to each token's actual fricative offset.
+
+As shown in Figure~\ref{fig:s-offset-commitment}, /s/ commitment moved with the manipulated fricative boundary.
+%
+Median /s/ commitment relative to fricative offset was 5 ms in the short condition, 5 ms in the normal condition, and 5 ms in the long condition.
+%
+Across matched trials, increasing frication duration by 100 ms delayed first commitment by a mean of 65.1 ms for /s/ and 66.7 ms for /\textesh/.
+%
+Exact 100-ms tracking, defined as a 100-ms difference in first-commitment time between the short and long versions of the same token, occurred for 52.8\% of /s/ and 55.5\% of /\textesh/ pairs in which both versions reached commitment.
+%
+In these trials, commitment maintained the same temporal relationship to fricative offset regardless of frication duration, indicating that commitment timing was tied directly to the segment boundary rather than to a fixed amount of elapsed processing time.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=.9\linewidth]{\detokenize{figures/s_commitment_relative_to_offset.pdf}}
+\caption{Time of /s/ commitment relative to fricative offset, with duration shifted by $-50$, $0$, or $+50$ ms. Dashed line: offset.}
+\label{fig:s-offset-commitment}
+\vspace{0.55\baselineskip}
+\end{figure}
+
+The simulations reproduce the main temporal contrasts reported by \citet{GalleEtAl2019}.
+%
+In Experiment~5, fricative effects on lexical competition emerged 144--165~ms later than stop effects; the model similarly produces substantially later fricative commitments under identical decision criteria.
+%
+In Experiment~6, increasing frication duration by 100~ms delayed lexical effects by 71--91~ms.
+%
+The corresponding manipulation delayed model commitment by an average of 65.1~ms for /s/ and 66.7~ms for /\textesh/, demonstrating a substantial effect of frication duration on commitment timing.
+
+The model nevertheless differs from the behavioral findings in an important respect.
+%
+While \citet{GalleEtAl2019} found little evidence that frication affected lexical competition before the following vocoid, 34.1\% of /s/ and 32.3\% of /\textesh/ trials reached commitment before fricative offset.
+%
+The model therefore captures the relative delay and duration sensitivity of fricative recognition, but does not reproduce the apparent withholding of early frication information to the same extent.
+
+\section{Discussion}
+
+The synthetic demonstrations show that one controller can produce distinct temporal trajectories under shared commitment criteria, yielding several testable predictions.
+
+First, the model predicts variation in \textit{time to commitment}.
+%
+Commitment should occur earlier when cues available early in the signal strongly separate the competing category distributions, and later when substantial separation depends on cues that become informative later.
+%
+The model additionally predicts that comparable shifts should occur whenever the timing of sufficiently diagnostic evidence is displaced while the relevant category distributions remain unchanged.
+
+Second, the model predicts the \textit{order of recognition}.
+%
+A later candidate region can reach \textsc{comm} before an earlier region when diagnostic information becomes available more rapidly for the later candidate.
+%
+Recognition order should therefore depend on the relative timing and diagnosticity of the cues available to concurrently maintained interpretations.
+
+Third, the architecture predicts that revision is possible when later evidence changes the support for an already committed interpretation.
+%
+Empirically, such cases should produce temporary changes in lexical competition corresponding to the original interpretation, its reevaluation, and any subsequent recommitment.
+
+Fourth, the architecture provides an operational account of the contribution of individual cues to recognition.
+%
+A cue can affect the recognition trajectory only at or after the point at which its information becomes available.
+%
+Manipulating either the value of a cue or the time at which it becomes informative therefore provides a direct intervention on the modeled process.
+%
+If such a manipulation changes category support, commitment time, recognition order, or revision, the model assigns that cue a causal role within the recognition process.
+%
+This does not by itself establish experimental causality, but it generates temporally specific predictions that can be tested through controlled cue manipulations.
+
+Extending existing categorization models to real-time recognition requires specifying how partial acoustic information is retained and accumulated throughout the signal.
+%
+For the implementation presented here, this involved adapting the likelihood calculations to incomplete cue measurements, updating estimates as evidence accumulates, and allowing contextual expectations that become available later to change the interpretation of previously observed cues.
+
+The simulations demonstrate that a shared controller can produce different recognition trajectories, but do not establish which individual cue dependencies or commitment conditions account for each temporal pattern.
+%
+Manipulating these components independently could distinguish process explanations that are equally compatible with endpoint categorization or similar overall recognition times.
+
+The synthetic demonstrations establish the feasibility of the proposed architecture, but determining which dependencies characterize human perception will require natural speech data and temporally resolved behavioral evaluation.
+%
+By specifying how acoustic evidence interacts with the developing perceptual state, the model presented here makes the timing, order, and revision of phonetic interpretations explicit targets of computational explanation and empirical testing.
+
+\par\medskip
+\noindent\textbf{Code availability.}
+%
+The model implementation, simulation scripts, and materials for reproducing the results and figures are available at \url{https://github.com/ryncor/realtime-cue-integration-model-cls2026}.
+
+\bibliographystyle{clslike}
+\bibliography{cls}
+
+\end{document}

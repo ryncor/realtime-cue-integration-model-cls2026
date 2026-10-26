@@ -1,0 +1,10 @@
+*.aux
+*.log
+*.blg
+*.bbl
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+Rplots.pdf
+__pycache__/
+.venv/

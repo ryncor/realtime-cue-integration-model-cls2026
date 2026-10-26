@@ -1,0 +1,9 @@
+condition,truth,eligible_n,short_and_long_commit_n,all_three_commit_n,median_long_minus_short_commit_ms,mean_long_minus_short_commit_ms,p10_long_minus_short_commit_ms,p90_long_minus_short_commit_ms,median_normal_minus_short_commit_ms,median_long_minus_normal_commit_ms,boundary_tracking_ratio,exact_100ms_tracking_n,exact_100ms_tracking_rate,unchanged_commit_time_n,unchanged_commit_time_rate,nonexact_tracking_n,short_only_commit_n,long_only_commit_n
+focal_binary,sh|C_prevocalic,375,375,375,0.0,2.6666666666666665,0.0,0.0,0.0,0.0,0.0,10,0.02666666666666667,365,0.9733333333333334,365,0,0
+focal_binary,s|C_prevocalic,375,375,375,0.0,4.533333333333333,0.0,0.0,0.0,0.0,0.0,17,0.04533333333333334,358,0.9546666666666667,358,0,0
+full_model,sh|C_prevocalic,375,375,375,100.0,66.70666666666666,0.0,100.0,50.0,50.0,1.0,208,0.5546666666666666,65,0.17333333333333334,167,0,0
+full_model,s|C_prevocalic,375,375,375,100.0,65.09333333333333,0.0,100.0,50.0,50.0,1.0,198,0.528,76,0.20266666666666666,177,0,0
+full_no_guard,sh|C_prevocalic,375,375,375,0.0,25.706666666666667,0.0,100.0,0.0,0.0,0.0,94,0.25066666666666665,276,0.736,281,0,0
+full_no_guard,s|C_prevocalic,375,375,375,0.0,25.026666666666667,0.0,100.0,0.0,0.0,0.0,91,0.24266666666666667,279,0.744,284,0,0
+full_robustness_only,sh|C_prevocalic,375,375,375,100.0,66.70666666666666,0.0,100.0,50.0,50.0,1.0,208,0.5546666666666666,65,0.17333333333333334,167,0,0
+full_robustness_only,s|C_prevocalic,375,375,375,100.0,65.09333333333333,0.0,100.0,50.0,50.0,1.0,198,0.528,76,0.20266666666666666,177,0,0

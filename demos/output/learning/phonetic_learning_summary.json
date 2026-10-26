@@ -1,0 +1,124 @@
+{
+  "timing": [
+    {
+      "group": "fricative",
+      "full_field": {
+        "n": 750,
+        "committed": 750,
+        "rate": 1.0,
+        "median": 145.0,
+        "p10": 115.0,
+        "p90": 185.0,
+        "initial_accuracy": 0.8786666666666667,
+        "by_vowel_accuracy": {
+          "a": 0.856020942408377,
+          "i": 0.9021739130434783
+        }
+      },
+      "focal_binary": {
+        "n": 750,
+        "committed": 750,
+        "rate": 1.0,
+        "median": 35.0,
+        "p10": 35.0,
+        "p90": 165.0,
+        "initial_accuracy": 0.9413333333333334,
+        "by_vowel_accuracy": {
+          "a": 0.9240837696335078,
+          "i": 0.9592391304347826
+        }
+      }
+    },
+    {
+      "group": "stop",
+      "full_field": {
+        "n": 750,
+        "committed": 750,
+        "rate": 1.0,
+        "median": 45.0,
+        "p10": 10.0,
+        "p90": 105.0,
+        "initial_accuracy": 0.8213333333333334,
+        "by_vowel_accuracy": {
+          "a": 0.8219895287958116,
+          "i": 0.8206521739130435
+        }
+      },
+      "focal_binary": {
+        "n": 750,
+        "committed": 750,
+        "rate": 1.0,
+        "median": 35.0,
+        "p10": 10.0,
+        "p90": 35.0,
+        "initial_accuracy": 0.9973333333333333,
+        "by_vowel_accuracy": {
+          "a": 0.9973821989528796,
+          "i": 0.9972826086956522
+        }
+      }
+    }
+  ],
+  "revisions": [
+    {
+      "group": "fricative",
+      "n": 1500,
+      "early_committed": 1144,
+      "wrong_early": 57,
+      "correct_early": 1087,
+      "wrong_to_correct": 0,
+      "correct_to_wrong": 0,
+      "wrong_to_other_wrong": 0,
+      "wrong_to_correct_rate": 0.0,
+      "correct_to_wrong_rate": 0.0
+    },
+    {
+      "group": "stop",
+      "n": 1500,
+      "early_committed": 1408,
+      "wrong_early": 181,
+      "correct_early": 1227,
+      "wrong_to_correct": 10,
+      "correct_to_wrong": 14,
+      "wrong_to_other_wrong": 0,
+      "wrong_to_correct_rate": 0.055248618784530384,
+      "correct_to_wrong_rate": 0.011409942950285249
+    }
+  ],
+  "fricative_context_dependence": [
+    {
+      "condition": "full",
+      "n": 750,
+      "accuracy": 0.872,
+      "mean_truth_p": 0.71606051851133
+    },
+    {
+      "condition": "no_vowel",
+      "n": 750,
+      "accuracy": 0.872,
+      "mean_truth_p": 0.7153350884127737
+    },
+    {
+      "condition": "no_speaker",
+      "n": 750,
+      "accuracy": 0.86,
+      "mean_truth_p": 0.700748981910093
+    },
+    {
+      "condition": "neither",
+      "n": 750,
+      "accuracy": 0.86,
+      "mean_truth_p": 0.6992927202307005
+    }
+  ],
+  "recovery": [
+    {
+      "pair": "s|C_prevocalic vs sh|C_prevocalic",
+      "standardized_separation_rmse": 0.04223006643946368
+    },
+    {
+      "pair": "d|C_prevocalic vs t|C_prevocalic",
+      "standardized_separation_rmse": 0.046311266254582886
+    }
+  ]
+}

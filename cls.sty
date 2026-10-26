@@ -1,0 +1,331 @@
+%% Feb. 12, 2007
+
+% abstract 
+\AtBeginDocument{%
+  \addto\captionsenglish{%
+    \renewcommand{\abstractname}{\uppercase{Abstract}}}%
+  \addto\captionsgerman{%
+    \renewcommand{\abstractname}{\uppercase{Zusammenfassung}}}%
+}
+
+% package includes
+\usepackage[left=1.5in,top=1.25in,right=1.5in,bottom=1.25in]{geometry}
+\usepackage{times}
+\usepackage{calc}
+%\usepackage{clslike}
+%\usepackage{endnotes} \let\footnote\endnote
+\usepackage[utf8]{inputenc}
+%\usepackage[latin1]{inputenc}
+\usepackage[german,english]{babel}
+\usepackage[bf]{caption}
+\usepackage[T1]{fontenc}
+\usepackage[leqno,fleqn]{amsmath}
+% \usepackage{graphicx}
+% \usepackage{color}
+% \usepackage{colortbl}
+% \usepackage{xcolor}
+% \usepackage{qtree}
+% \usepackage{tikz}
+% \usepackage{url}
+% \usepackage{gb4e}
+
+\linespread{.9}
+
+% No page numbers
+\pagestyle{empty}
+
+%\oddsidemargin -0.20in
+%\evensidemargin -0.20in
+%\topmargin 0truemm
+%\headheight 0truept
+%\footskip 0truept
+%\textheight 235truemm
+%\textwidth 170truemm
+%\voffset 0truept
+%\headsep 0truept
+
+
+% floats
+\setlength{\intextsep}{0pt}
+\setlength{\textfloatsep}{0pt}
+
+% Keywords
+\newcommand{\keywords}[1]{\medskip\noindent\textbf{Keywords:} #1}
+
+% THIS DOESN'T SEEM TO WORK, don't use it. What's the point, anyway? Just use
+% good old {\tt ...} for urls and emails.
+% URL definitions
+%\DeclareUrlCommand\urlemail{\UrlFont{\rmfamily}}
+%\urlstyle{rm}
+
+% section/subsection/subsubsection (from: article.cls -- 2004/02/16 v1.4f)
+\makeatletter
+
+% OT 'hand'
+\usepackage{pifont}
+\newcommand{\hand}{\ding{43}}
+
+
+%% All the citation style stuff from lsalike
+\let\@internalcite\cite
+
+\def\xcite{\def\@citeseppen{-1000}%
+ \def\@cite##1##2{(\nobreak\hskip 0in{##1\if@tempswa , ##2\fi})}%
+ \def\citeauthoryear##1##2{\frenchspacing##1 ##2}\@internalcite}
+
+\def\xpagecite[#1]#2{\def\@citeseppen{-1000}%
+ \def\@cite##1##2{(\nobreak\hskip 0in{##1\if@tempswa , ##2\fi})}%
+ \def\citeauthoryear##1##2{\frenchspacing##1 ##2:#1}\@internalcite{#2}}
+
+\def\cite{\@ifnextchar [{\xpagecite}{\xcite}}
+
+\def\xnamecite{\def\@citeseppen{1000}%
+ \def\@cite##1##2{{##1\if@tempswa , ##2\fi}}%
+ \def\citeauthoryear##1##2{\frenchspacing##1 (##2)}\@internalcite}
+
+\def\quotecite{\def\@citeseppen{1000}%
+ \def\@cite##1##2{{##1\if@tempswa , ##2\fi}}%
+ \def\citeauthoryear##1##2{\frenchspacing##1's (##2)}\@internalcite}
+
+\def\citeboth{\def\@citeseppen{1000}%
+ \def\@cite##1##2{{##1\if@tempswa , ##2\fi}}%
+ \def\citeauthoryear##1##2{\frenchspacing##1 ##2}\@internalcite}
+
+% \def\item{\@ifnextchar [{\@item}{\@noitemargtrue \@item[\@itemlabel]}}
+\def\namecite{\@ifnextchar [{\pagecite}{\xnamecite}}
+
+\def\pagecite[#1]#2{\def\@citeseppen{1000}%
+ \def\@cite##1##2{{##1\if@tempswa , ##2\fi}}%
+ \def\citeauthoryear##1##2{\frenchspacing##1 (##2:#1)}\@internalcite{#2}}
+
+\def\citeauthor#1{\def\@cite##1##2{{##1\if@tempswa , ##2\fi}}%
+ \def\citeauthoryear##1##2{\frenchspacing##1}\@citedata{#1}}
+
+\def\citeyear#1{\def\@cite##1##2{{##1\if@tempswa , ##2\fi}}%
+ \def\citeauthoryear##1##2{##2}\@citedata{#1}}
+
+\def\@citedata#1{\@tempswafalse%
+ \if@filesw\immediate\write\@auxout{\string\citation{#1}}\fi
+  \def\@citea{}\@cite{\@for\@citeb:=#1\do
+    {\@citea\def\@citea{,\penalty\@citeseppen\ }\@ifundefined
+       {b@\@citeb}{{\bf ?}\@warning
+       {Citation `\@citeb' on page \thepage \space undefined}}%
+{\csname b@\@citeb\endcsname}}}{}}
+
+% don't box citations, separate with ; and a space
+% also, make the penalty between citations negative: a good place to break
+\def\@citex[#1]#2{\if@filesw\immediate\write\@auxout{\string\citation{#2}}\fi
+  \def\@citea{}\@cite{\@for\@citeb:=#2\do
+    {\@citea\def\@citea{;\penalty\@citeseppen\ }\@ifundefined
+       {b@\@citeb}{{\bf ?}\@warning
+       {Citation `\@citeb' on page \thepage \space undefined}}%
+{\csname b@\@citeb\endcsname}}}{#1}}
+
+% raise the brackets in bibliography labels
+\def\@biblabel#1{}
+
+% lsalike currently uses the ampersand (&) instead of the
+% word "and" in author lists, and it also replaces names by dashes in one
+% more situation than the journal Language.
+% Both these can be returned to standard Language style by switching the comments on
+% the appropriate functions for \lsadashifynew  and \lsaand below.  
+% (The non-standard situation occurs for ordered examples like:
+%
+% Robin, Christopher and Winnie Pooh
+% Robin, Christopher and Eeyore
+%
+% The style will currently dashify the second Christopher Robin -
+% this is not standard.
+
+\def\lsadashify#1{---\hspace*{-2pt}---}
+
+\def\lsadashifynew#1{---\hspace*{-2pt}---}
+%\def\lsadashifynew#1{#1}
+
+\def\lsaand{\& }
+%\def\lsaand{and }
+
+
+% stuff about section headings
+\renewcommand\thesection {\@arabic\c@section}
+\renewcommand\thesubsection {\thesection.\@arabic\c@subsection}
+\renewcommand\thesubsubsection {\thesubsection.\@arabic\c@subsubsection}
+
+\renewcommand\section{\@startsection{section}{1}{\z@}%
+                                   {-5.25ex plus -1ex minus -.2ex}%
+                                   {.1ex plus 0ex}%
+                                   {\fontfamily{phv}\selectfont\normalsize\bfseries}}
+\renewcommand\subsection{\@startsection{subsection}{2}{\z@}%
+                                   {-3.25ex plus -1ex minus -.2ex}%
+                                   {.1ex plus 0ex}%
+                                     {\fontfamily{phv}\selectfont\normalsize\bfseries}}
+\renewcommand\subsubsection{\@startsection{subsubsection}{3}{\z@}%
+                                   {-3.25ex plus -1ex minus -.2ex}%
+                                   {.1ex plus 0ex}%
+                                   {\fontfamily{phv}\selectfont\normalsize\bfseries}}
+                            
+\makeatother
+
+% titlepage (from: article.cls -- 2004/02/16 v1.4f)
+\makeatletter
+
+
+\renewcommand\maketitle{\par
+  \begingroup
+    \renewcommand\thefootnote{\@fnsymbol\c@footnote}%
+    \def\@makefnmark{\rlap{\@textsuperscript{\normalfont\@thefnmark}}}%
+    \long\def\@makefntext##1{\parindent 1em\noindent
+            \hb@xt@1.8em{%
+                \hss\@textsuperscript{\normalfont\@thefnmark}}##1}%
+    \if@twocolumn
+      \ifnum \col@number=\@ne
+        \@maketitle
+      \else
+        \twocolumn[\@maketitle]%
+      \fi
+    \else
+      \newpage
+      \global\@topnum\z@   % Prevents figures from going at top of page.
+      \@maketitle
+    \fi
+    \thispagestyle{empty}\@thanks % no page number at all
+  \endgroup
+  
+
+  \setcounter{footnote}{0}%
+  \global\let\thanks\relax
+  \global\let\maketitle\relax
+  \global\let\@maketitle\relax
+  \global\let\@thanks\@empty
+  \global\let\@author\@empty
+  \global\let\@date\@empty
+  \global\let\@title\@empty
+  \global\let\title\relax
+  \global\let\author\relax
+  \global\let\date\relax
+  \global\let\and\relax
+}
+
+\def\title#1{\gdef\@title{{\fontfamily{phv}\selectfont\bfseries #1}}}
+\def\author#1{\gdef\@author{{\fontfamily{phv}\selectfont #1}}}
+\def\organization#1{\gdef\@organization{{\fontfamily{phv}\selectfont #1}}}
+%\def\email#1{\gdef\@email{{\tt #1}}}
+
+\def\@maketitle{%
+  \newpage
+  \null
+  \vspace{2pt}
+  \begin{center}%
+  \let \footnote \thanks
+ %   {\Large \bfseries\@title \par}%
+    {\bfseries\@title \par}%
+    \vskip 13pt%
+    {\rm
+      \lineskip .6em%
+      \begin{tabular}[t]{c}%
+        \@author\\[1pt]
+        \@organization\\
+        %{\small\@email}
+      \end{tabular}}%
+  \end{center}
+\vspace{-6pt}
+}
+
+\makeatother
+
+
+% list environments (from: tweaklist.sty)
+\makeatletter
+\def\enumhook{}
+\def\enumhooki{}
+\def\enumhookii{}
+\def\enumhookiii{}
+\def\enumhookiv{}
+\def\itemhook{}
+\def\itemhooki{}
+\def\itemhookii{}
+\def\itemhookiii{}
+\def\itemhookiv{}
+\def\descripthook{}
+\def\enumerate{%
+  \ifnum \@enumdepth >\thr@@\@toodeep\else
+    \advance\@enumdepth\@ne
+    \edef\@enumctr{enum\romannumeral\the\@enumdepth}%
+      \expandafter
+      \list
+        \csname label\@enumctr\endcsname
+        {\usecounter\@enumctr\def\makelabel##1{\hss\llap{##1}}%
+          \enumhook \csname enumhook\romannumeral\the\@enumdepth\endcsname}%
+  \fi}
+\def\itemize{%
+  \ifnum \@itemdepth >\thr@@\@toodeep\else
+    \advance\@itemdepth\@ne
+    \edef\@itemitem{labelitem\romannumeral\the\@itemdepth}%
+    \expandafter
+    \list
+      \csname\@itemitem\endcsname
+      {\def\makelabel##1{\hss\llap{##1}}%
+        \itemhook \csname itemhook\romannumeral\the\@itemdepth\endcsname}%
+  \fi}
+
+\renewenvironment{description}
+                 {\list{}{\labelwidth\z@ \itemindent-\leftmargin
+                          \let\makelabel\descriptionlabel\descripthook}}
+                 {\endlist}
+
+\makeatother
+
+% itemize environment lengths
+\renewcommand{\itemhook}{
+  \setlength{\topsep}{12pt}%
+  \setlength{\parskip}{0pt}%
+  \setlength{\partopsep}{0pt}%
+  \setlength{\parsep}{0pt}%
+  \setlength{\itemsep}{0pt}%
+}
+
+% enumerate environment lengths
+\renewcommand{\enumhook}{
+  \setlength{\topsep}{6pt}%
+  \setlength{\parskip}{0pt}%
+  \setlength{\partopsep}{0pt}%
+  \setlength{\parsep}{0pt}%
+  \setlength{\itemsep}{0pt}%
+}
+
+%captions
+\renewcommand{\captionfont}{\small}
+\setlength{\captionmargin}{.5cm}
+
+%bibliography - orig
+\makeatletter
+\renewenvironment{thebibliography}[1]
+     {\section*{\center References}%
+     \bigskip
+      \@mkboth{\MakeUppercase\refname}{\MakeUppercase\refname}%
+      \list{\@biblabel{\@arabic\c@enumiv}}%
+           {\settowidth\labelwidth{\@biblabel{#1}}%
+             \footnotesize
+            %\leftmargin\labelwidth
+            \setlength{\leftmargin}{20pt}
+            \setlength{\itemindent}{-20pt}
+ 	  \setlength{\itemsep}{0pt}
+            \setlength{\topsep}{0pt}
+            \setlength{\parskip}{0pt}
+            \setlength{\partopsep}{0pt}
+            \setlength{\parsep}{0pt}
+            \advance\leftmargin\labelsep
+            \@openbib@code
+            \usecounter{enumiv}%
+            \let\p@enumiv\@empty
+            \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+      \sloppy
+      \clubpenalty4000
+      \@clubpenalty \clubpenalty
+      \widowpenalty4000%
+      \sfcode`\.\@m}
+     {\def\@noitemerr
+       {\@latex@warning{Empty `thebibliography' environment}}%
+      \endlist}
+\makeatother
+

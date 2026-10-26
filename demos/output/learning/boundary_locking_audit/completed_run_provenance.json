@@ -1,0 +1,11 @@
+{
+  "controller_source": "/home/r/projects/realtime-cue-integration-model-cls2026/realtime_model/phonetic_competition_model.py",
+  "controller_sha256": "25ec38f7957dac66759649fa55da5addf3f4bcb13d9f41f61f803d8ec5fe25f4",
+  "audit_sha256": "56c08ad706240bcc8b283016c2ad0ad4a6e0806295f9dfe00655ce579098afeb",
+  "model_source": "/home/r/projects/realtime-cue-integration-model-cls2026/demos/output/learning/phonetic_full_inventory_model.npz",
+  "model_sha256": "59081c1b06bb507b2b3864931a24cc0b38a41748b3a36aab35c901406fd978f5",
+  "n_test": 1500,
+  "seed": 20260928,
+  "python_executable": "/usr/local/bin/python3",
+  "commitment_policy": "online_partial_channel_predictive_robustness_and_provisional_exhaustion"
+}

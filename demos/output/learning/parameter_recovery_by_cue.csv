@@ -1,0 +1,12 @@
+pair,cue,true_separation,learned_separation,standardized_error
+s|C_prevocalic vs sh|C_prevocalic,frication_M1_kHz,1.5999999999999996,1.5256909253724162,-0.07247510423842958
+s|C_prevocalic vs sh|C_prevocalic,frication_M2_kHz,-0.34999999999999987,-0.3792395172205848,-0.06147179624747592
+s|C_prevocalic vs sh|C_prevocalic,frication_M3_skewness,-1.45,-1.4348876360234604,0.02400754586734444
+s|C_prevocalic vs sh|C_prevocalic,frication_duration_ms,-5.0,-5.243887294075869,-0.0110857860943577
+s|C_prevocalic vs sh|C_prevocalic,frication_voicing_proportion,0.0,-0.0016741545734096518,-0.023916493905852165
+s|C_prevocalic vs sh|C_prevocalic,F2_onset_kHz,0.08000000000000007,0.07641084780785128,-0.01993973440082664
+d|C_prevocalic vs t|C_prevocalic,VOT_ms,-55.0,-55.599893615863294,-0.06106756220713802
+d|C_prevocalic vs t|C_prevocalic,vowel_onset_f0_ST,-2.0,-1.9360003641472217,0.07111070650308705
+d|C_prevocalic vs t|C_prevocalic,following_vowel_duration_ms,18.0,16.218156737507442,-0.040038894319949836
+d|C_prevocalic vs t|C_prevocalic,burst_M1_kHz,0.0,0.0031100762097227763,0.003455640233025307
+d|C_prevocalic vs t|C_prevocalic,F2_onset_kHz,0.0,-0.0032331561190007733,-0.017961978438893186
